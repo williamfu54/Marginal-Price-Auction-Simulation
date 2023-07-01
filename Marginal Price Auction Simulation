@@ -1,0 +1,116 @@
+import random
+from statistics import mean
+
+random.seed(2023)
+
+PRICE_FLOOR = 100
+CAPACITY = 10000
+NUM_BIDDERS = int(CAPACITY * 1.5)
+MARKUP = 2
+VOLATILITY = 0.25
+
+SIMULATIONS = 1000
+
+
+def generate_b_array(N, m, markup, b_array):
+
+    mu = m * markup
+    sigma = VOLATILITY * mu
+
+    for i in range(N):
+        b_array.append(round(random.gauss(mu, sigma), 2))
+    return None
+
+
+excess_rents_array = []
+excess_valuation_array = []
+ticket_price_array = []
+consumer_surplus_array = []
+
+pp_excess_rents_array = []
+pp_excess_valuation_array = []
+pp_consumer_surplus_array = []
+
+for i in range(SIMULATIONS):
+
+    b_array = []
+    generate_b_array(NUM_BIDDERS, PRICE_FLOOR, MARKUP, b_array)
+
+    c_array = sorted(b_array, reverse=True)
+
+    # Calculations for First-Come-First-Serve System
+    valuation_fcfs = 0
+    rents_fcfs = 0
+
+    curr_capacity = CAPACITY
+    for bid in b_array:
+
+        if (curr_capacity > 0) and (bid >= PRICE_FLOOR):
+            curr_capacity -= 1
+            valuation_fcfs += bid
+            rents_fcfs += PRICE_FLOOR
+
+    # Calculations for Marginal Price System
+    valuation_mps = 0
+    final_price = PRICE_FLOOR
+
+    curr_capacity = CAPACITY
+    for bid in c_array:
+
+        if (curr_capacity > 0) and (bid >= PRICE_FLOOR):
+            curr_capacity -= 1
+            final_price = bid
+            valuation_mps += bid
+
+    if (curr_capacity > 0):
+        final_price = PRICE_FLOOR
+
+    num_successful_bids = CAPACITY-curr_capacity
+    rents_mps = num_successful_bids * final_price
+
+    # Calculations for Total Differences
+    consumer_surplus_fcfs = valuation_fcfs - rents_fcfs
+    consumer_surplus_mps = valuation_mps - rents_mps
+
+    excess_rents = rents_mps - rents_fcfs
+    excess_valuation = valuation_mps - valuation_fcfs
+    excess_consumer_surplus = consumer_surplus_mps - consumer_surplus_fcfs
+
+    excess_rents_array.append(round(excess_rents, 2))
+    excess_valuation_array.append(round(excess_valuation, 2))
+    ticket_price_array.append(round(final_price, 2))
+    consumer_surplus_array.append(round(excess_consumer_surplus, 2))
+
+    # Calculations for Per Person Differences
+    pp_excess_rents = excess_rents / num_successful_bids
+    pp_excess_valuation = excess_valuation / num_successful_bids
+    pp_consumer_surplus = excess_consumer_surplus / num_successful_bids
+    
+    pp_excess_rents_array.append(round(pp_excess_rents, 2))
+    pp_excess_valuation_array.append(round(pp_excess_valuation, 2))
+    pp_consumer_surplus_array.append(round(pp_consumer_surplus, 2))
+
+# Total
+print("Total Minimum")
+print(round(min(ticket_price_array), 2))
+print(round(min(excess_rents_array), 2))
+print(round(min(excess_valuation_array), 2))
+print(round(min(consumer_surplus_array), 2))
+
+print("Total Mean")
+print(round(mean(ticket_price_array), 2))
+print(round(mean(excess_rents_array), 2))
+print(round(mean(excess_valuation_array), 2))
+print(round(mean(consumer_surplus_array), 2))
+
+print("Total Maximum")
+print(round(max(ticket_price_array), 2))
+print(round(max(excess_rents_array), 2))
+print(round(max(excess_valuation_array), 2))
+print(round(max(consumer_surplus_array), 2))
+
+# Per Person
+print("Per Person Mean")
+print(round(mean(pp_excess_rents_array), 2))
+print(round(mean(pp_excess_valuation_array), 2))
+print(round(mean(pp_consumer_surplus_array), 2))
